@@ -1,0 +1,128 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local TweenService = game:GetService("TweenService")
+
+local Window = Rayfield:CreateWindow({
+   Name = "AM_BRCR7 ",
+   LoadingTitle = "Loading...",
+   LoadingSubtitle = "By AM_BRCR7",
+   ConfigurationSaving = { Enabled = false }
+})
+
+local MainTab = Window:CreateTab("Main Controls", 4483362458)
+
+local StartPos = Vector3.new(-162.01, 2.71, -371.84)
+local EndPos = Vector3.new(-8092.04, -2.19, -371.97)
+
+_G.LavaTsunamiRemover = false
+MainTab:CreateToggle({
+   Name = "Delete lava and tsunami",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.LavaTsunamiRemover = Value
+      if Value then
+          task.spawn(function()
+              while _G.LavaTsunamiRemover do
+                  local disasterFolder = game.Workspace:FindFirstChild("DisasterItems")
+                  if disasterFolder then disasterFolder:ClearAllChildren() end
+                  
+                  local lavaFolder = game.Workspace:FindFirstChild("LavaFloor")
+                  if lavaFolder then
+                      for _, part in pairs(lavaFolder:GetDescendants()) do
+                          if part:IsA("BasePart") and part.CanTouch == true then
+                              part.CanTouch = false
+                              part.Color = Color3.fromRGB(0, 255, 0)
+                              part.Transparency = 0.6
+                              part.Material = Enum.Material.Glass
+                          end
+                      end
+                  end
+                  task.wait(0.1)
+              end
+          end)
+      end
+   end,
+})
+
+_G.AutoCollectCash = false
+MainTab:CreateToggle({
+   Name = "Auto Collect Cash",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.AutoCollectCash = Value
+      task.spawn(function()
+          while _G.AutoCollectCash do
+              for _, pad in pairs(game.Workspace:GetDescendants()) do
+                  if pad.Name == "CollectPad" and pad:IsA("BasePart") then
+                      firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, pad, 0)
+                      firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, pad, 1)
+                  end
+              end
+              task.wait(30)
+          end
+      end)
+   end,
+})
+
+_G.AutoGetCoin = false
+MainTab:CreateToggle({
+   Name = "Auto Get Coin",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.AutoGetCoin = Value
+      if Value then
+          task.spawn(function()
+              while _G.AutoGetCoin do
+                  local closestCoin = nil
+                  local shortestDistance = math.huge
+                  local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                  
+                  if hrp then
+                      for _, obj in pairs(game.Workspace:GetDescendants()) do
+                          if string.find(obj.Name:lower(), "coin") and obj:IsA("BasePart") then
+                              local dist = (hrp.Position - obj.Position).Magnitude
+                              if dist < shortestDistance then
+                                  closestCoin = obj
+                                  shortestDistance = dist
+                              end
+                          end
+                      end
+                      
+                      if closestCoin and _G.AutoGetCoin then
+                          local speed = 400
+                          local info = TweenInfo.new(shortestDistance/speed, Enum.EasingStyle.Linear)
+                          local tween = TweenService:Create(hrp, info, {CFrame = closestCoin.CFrame})
+                          tween:Play()
+                          tween.Completed:Wait()
+                          task.wait(0.3)
+                      end
+                  end
+                  task.wait(0.1)
+              end
+          end)
+      end
+   end,
+})
+
+local MobileGui = Instance.new("ScreenGui", game.Players.LocalPlayer.PlayerGui)
+MobileGui.ResetOnSpawn = false
+local function CreateFloatingBtn(text, color, pos, callback)
+    local btn = Instance.new("TextButton", MobileGui)
+    btn.Size = UDim2.new(0, 65, 0, 65)
+    btn.Position = pos
+    btn.BackgroundColor3 = color
+    btn.BackgroundTransparency = 0.3
+    btn.Text = text
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Draggable = true
+    btn.Active = true
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+    btn.MouseButton1Click:Connect(callback)
+end
+
+CreateFloatingBtn("START", Color3.fromRGB(0, 150, 0), UDim2.new(0.1, 0, 0.4, 0), function()
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(StartPos)
+end)
+
+CreateFloatingBtn("END", Color3.fromRGB(150, 0, 0), UDim2.new(0.1, 0, 0.52, 0), function()
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(EndPos)
+end)
